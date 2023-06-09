@@ -1,4 +1,4 @@
-Minimal Kubernetes pod monitoring using Prometheus, kube-state-metrics and Prometheus Operator<br>
+Minimal Kubernetes pod monitoring setup using Prometheus, kube-state-metrics and Prometheus Operator<br>
 Packed in Helm chart
 
 Installation:

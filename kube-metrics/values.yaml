@@ -1,0 +1,53 @@
+namespace: kube-metrics
+
+
+prometheus:
+  image:
+    repository: prom/prometheus
+    pullPolicy: IfNotPresent
+    tag: latest
+  resources:
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+  additionalConfigs: |
+    - job_name: "kubelet"
+      scheme: https
+      metrics_path: /metrics/cadvisor
+      tls_config:
+        ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+      authorization:
+        credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+      kubernetes_sd_configs:
+        - role: node
+      relabel_configs:
+        - action: labelmap
+          regex: __meta_kubernetes_node_label_(.+)
+
+    - job_name: "kubernetes-apiservers"
+      kubernetes_sd_configs:
+        - role: endpoints
+      scheme: https
+      tls_config:
+        ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+      authorization:
+        credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+      relabel_configs:
+        - source_labels:
+            [
+              __meta_kubernetes_namespace,
+              __meta_kubernetes_service_name,
+              __meta_kubernetes_endpoint_port_name,
+            ]
+          action: keep
+          regex: default;kubernetes;https
+
+kube-state-metrics:
+  image:
+    repository: registry.k8s.io/kube-state-metrics/kube-state-metrics
+    tag: v2.8.2
+    pullPolicy: IfNotPresent
+  resources:
+    limits:
+      memory: "300Mi"
+      cpu: "300m"

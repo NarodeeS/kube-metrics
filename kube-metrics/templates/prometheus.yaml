@@ -1,0 +1,33 @@
+{{- $module := index .Values.prometheus -}}
+{{- $module_name := "prometheus" -}}
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
+  namespace: {{ .Values.namespace }}
+spec:
+  serviceAccountName: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}-account
+  image: {{ $module.image.repository }}:{{ $module.image.tag }}
+  imagePullPolicy: {{ $module.image.pullPolicy }} 
+  scrapeInterval: 15s
+  serviceMonitorSelector:
+    matchLabels:
+      app: prometheus
+  additionalScrapeConfigs: 
+    name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}-secret
+    key: additionalConfigs
+  resources:
+    {{- $module.resources | toYaml | nindent 4 }}
+  enableAdminAPI: false
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
+  namespace: {{ .Values.namespace }}
+spec:
+  selector:
+    prometheus: {{ include "kube-metrics.fullname" . }}-prometheus
+  ports:
+    - port: 9090
+      targetPort: 9090

@@ -1,0 +1,46 @@
+{{- $module_name := "prometheus" -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}-role
+  namespace: {{ .Values.namespace }}
+rules:
+  - apiGroups: [""]
+    resources:
+      - nodes
+      - nodes/metrics
+      - services
+      - endpoints
+      - pods
+    verbs: ["get", "list", "watch"]
+
+  - apiGroups:
+      - networking.k8s.io
+    resources:
+      - ingresses
+    verbs: ["get", "list", "watch"]
+
+  - verbs: ["get"]
+    nonResourceURLs:
+      - /metrics
+      - /metrics/cadvisor
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}-account
+  namespace: {{ .Values.namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}-role-binding
+  namespace: {{ .Values.namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}-role
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}-account
+    namespace: {{ .Values.namespace }}

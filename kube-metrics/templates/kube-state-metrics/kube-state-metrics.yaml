@@ -1,4 +1,4 @@
-{{- $module := index .Values "kube-state-metrics" -}}
+{{- $module := index .Values.kubeStateMetrics -}}
 {{- $module_name := "kube-state-metrics" -}}
 apiVersion: apps/v1
 kind: Deployment
@@ -6,7 +6,6 @@ metadata:
   labels:
     app.kubernetes.io/name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
   name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
-  namespace: {{ .Values.namespace }}
 spec:
   replicas: 1
   selector:
@@ -17,8 +16,12 @@ spec:
       labels:
         app.kubernetes.io/name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
     spec:
-      serviceAccountName: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}-account
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       automountServiceAccountToken: true
+      serviceAccountName: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
       containers:
         - name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
           image: {{ $module.image.repository }}:{{ $module.image.tag }}
@@ -46,16 +49,6 @@ spec:
               port: 8081
             initialDelaySeconds: 5
             timeoutSeconds: 5
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-              - ALL
-            readOnlyRootFilesystem: true
-            runAsNonRoot: true
-            runAsUser: 65534
-            seccompProfile:
-              type: RuntimeDefault
       nodeSelector:
         kubernetes.io/os: linux
 ---
@@ -65,7 +58,6 @@ metadata:
   labels:
     app.kubernetes.io/name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
   name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
-  namespace: {{ .Values.namespace }}
 spec:
   clusterIP: None
   selector:
@@ -82,7 +74,6 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
-  namespace: {{ .Values.namespace }}
   labels:
     app: prometheus
     job: kube-state-metrics

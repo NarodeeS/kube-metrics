@@ -1,0 +1,25 @@
+{{- $module := index .Values.prometheusOperator -}}
+{{- $module_name := "prometheus-operator" -}}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  labels:
+    app.kubernetes.io/name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
+  name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
+spec:
+  egress:
+    - {}
+  ingress:
+    - from:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/name: prometheus
+      ports:
+        - port: 8443
+          protocol: TCP
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
+  policyTypes:
+    - Egress
+    - Ingress

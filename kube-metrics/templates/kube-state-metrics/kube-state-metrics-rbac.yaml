@@ -3,8 +3,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:
-    app.kubernetes.io/name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}-role
-  name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}-role
+    app.kubernetes.io/name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
+  name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
 rules:
   - verbs:
       - list
@@ -17,7 +17,7 @@ rules:
       - list
       - watch
     apiGroups:
-      - ''
+      - ''  
     resources:
       - configmaps
   - verbs:
@@ -212,21 +212,20 @@ automountServiceAccountToken: false
 kind: ServiceAccount
 metadata:
   labels:
-    app.kubernetes.io/name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}-account
-  name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}-account
-  namespace: {{ .Values.namespace }}
+    app.kubernetes.io/name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
+  name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   labels:
-    app.kubernetes.io/name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}-role-binding
-  name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}-role-binding
+    app.kubernetes.io/name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
+  name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}-role
+  name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
 subjects:
   - kind: ServiceAccount
-    name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}-account
-    namespace: {{ .Values.namespace }}
+    name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
+    namespace: default

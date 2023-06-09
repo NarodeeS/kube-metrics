@@ -1,0 +1,82 @@
+{{- $module := index .Values.prometheusOperator -}}
+{{- $module_name := "prometheus-operator" -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
+  name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
+      labels:
+        app.kubernetes.io/name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
+    spec:
+      automountServiceAccountToken: true
+      containers:
+        - args:
+            - --kubelet-service=kube-system/kubelet
+            - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.65.2
+          image: {{ $module.image.repository }}:{{ $module.image.tag }}
+          name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
+          ports:
+            - containerPort: 8080
+              name: http
+          resources:
+            {{- $module.resources | toYaml | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+        - args:
+            - --logtostderr
+            - --secure-listen-address=:8443
+            - --tls-cipher-suites=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305
+            - --upstream=http://127.0.0.1:8080/
+          image: {{ $module.kubeRbacProxy.image.repository }}:{{ $module.kubeRbacProxy.image.tag }}
+          name: kube-rbac-proxy
+          ports:
+            - containerPort: 8443
+              name: https
+          resources:
+            {{- $module.resources | toYaml | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsGroup: 65532
+            runAsNonRoot: true
+            runAsUser: 65532
+      nodeSelector:
+        kubernetes.io/os: linux
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
+  name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
+spec:
+  clusterIP: None
+  ports:
+    - name: https
+      port: 8443
+      targetPort: https
+  selector:
+    app.kubernetes.io/name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}

@@ -66,6 +66,7 @@ prometheusOperator:
     image:
       repository: quay.io/brancz/kube-rbac-proxy
       tag: v0.14.1
+      pullPolicy: IfNotPresent
     resources:
       limits:
         cpu: 20m

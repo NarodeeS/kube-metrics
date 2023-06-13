@@ -1,4 +1,4 @@
-{{- $module := index .Values.prometheusOperator -}}
+{{- $module := .Values.monitoring.prometheusOperator -}}
 {{- $module_name := "prometheus-operator" -}}
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -6,6 +6,7 @@ metadata:
   labels:
     app.kubernetes.io/name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
   name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
+  namespace:  {{ .Release.Namespace }}
 spec:
   egress:
     - {}

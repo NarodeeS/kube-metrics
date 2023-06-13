@@ -1,9 +1,10 @@
-{{- $module := index .Values.prometheus -}}
+{{- $module := .Values.monitoring.prometheus -}}
 {{- $module_name := "prometheus" -}}
 apiVersion: monitoring.coreos.com/v1
 kind: Prometheus
 metadata:
   name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
+  namespace:  {{ .Release.Namespace }}
 spec:
   {{- with .Values.imagePullSecrets }}
   imagePullSecrets:
@@ -12,7 +13,7 @@ spec:
   serviceAccountName: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
   image: {{ $module.image.repository }}:{{ $module.image.tag }}
   imagePullPolicy: {{ $module.image.pullPolicy }} 
-  scrapeInterval: 15s
+  scrapeInterval: {{ $module.scrapeInterval }}
   serviceMonitorSelector:
     matchLabels:
       app: prometheus
@@ -27,6 +28,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
+  namespace:  {{ .Release.Namespace }}
 spec:
   selector:
     prometheus: {{ include "kube-metrics.fullname" . }}-prometheus

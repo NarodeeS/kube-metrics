@@ -1,9 +1,0 @@
-{{- $module := index .Values.prometheus -}}
-{{- $module_name := "prometheus" -}}
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}-configmap
-data:
-  prometheus.yml: |
-    {{- $module.config | toString | nindent 4 }}

@@ -1,4 +1,4 @@
-{{- $module := index .Values.kubeStateMetrics -}}
+{{- $module := index .Values.monitoring.kubeStateMetrics -}}
 {{- $module_name := "kube-state-metrics" -}}
 apiVersion: apps/v1
 kind: Deployment
@@ -6,6 +6,7 @@ metadata:
   labels:
     app.kubernetes.io/name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
   name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
+  namespace:  {{ .Release.Namespace }}
 spec:
   replicas: 1
   selector:
@@ -58,6 +59,7 @@ metadata:
   labels:
     app.kubernetes.io/name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
   name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
+  namespace:  {{ .Release.Namespace }}
 spec:
   clusterIP: None
   selector:
@@ -77,6 +79,7 @@ metadata:
   labels:
     app: prometheus
     job: kube-state-metrics
+  namespace:  {{ .Release.Namespace }}
 spec:
   jobLabel: job
   selector:

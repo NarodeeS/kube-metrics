@@ -1,4 +1,4 @@
-{{- $module := index .Values.prometheusOperator -}}
+{{- $module := .Values.monitoring.prometheusOperator -}}
 {{- $module_name := "prometheus-operator" -}}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -104,6 +104,7 @@ metadata:
   labels:
     app.kubernetes.io/name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
   name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
+  namespace:  {{ .Release.Namespace }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -118,4 +119,4 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
-    namespace: default
+    namespace:  {{ .Release.Namespace }}

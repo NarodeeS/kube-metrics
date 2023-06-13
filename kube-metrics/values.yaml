@@ -1,76 +1,78 @@
-prometheus:
-  image:
-    repository: prom/prometheus
-    tag: latest
-    pullPolicy: IfNotPresent
-  resources:
-    limits:
-      memory: "512Mi"
-      cpu: "500m"
-  additionalConfigs: |
-    - job_name: "kubelet"
-      scheme: https
-      metrics_path: /metrics/cadvisor
-      tls_config:
-        ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-      authorization:
-        credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-      kubernetes_sd_configs:
-        - role: node
-      relabel_configs:
-        - action: labelmap
-          regex: __meta_kubernetes_node_label_(.+)
-
-    - job_name: "kubernetes-apiservers"
-      kubernetes_sd_configs:
-        - role: endpoints
-      scheme: https
-      tls_config:
-        ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-      authorization:
-        credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-      relabel_configs:
-        - source_labels:
-            [
-              __meta_kubernetes_namespace,
-              __meta_kubernetes_service_name,
-              __meta_kubernetes_endpoint_port_name,
-            ]
-          action: keep
-          regex: default;kubernetes;https
-
-kubeStateMetrics:
-  image:
-    repository: registry.k8s.io/kube-state-metrics/kube-state-metrics
-    tag: v2.8.2
-    pullPolicy: IfNotPresent
-  resources:
-    limits:
-      memory: "300Mi"
-      cpu: "300m"
-
-prometheusOperator:
-  image:
-    repository: quay.io/prometheus-operator/prometheus-operator
-    tag: v0.65.2
-    pullPolicy: IfNotPresent
-  resources:
-    limits:
-      cpu: 200m
-      memory: 200Mi
-    requests:
-      cpu: 100m
-      memory: 100Mi
-
-  kubeRbacProxy:
+monitoring:
+  prometheus:
     image:
-      repository: quay.io/brancz/kube-rbac-proxy
-      tag: v0.14.1
+      repository: prom/prometheus
+      tag: latest
       pullPolicy: IfNotPresent
     resources:
       limits:
-        cpu: 20m
-        memory: 40Mi
+        memory: "512Mi"
+        cpu: "500m"
+    scrapeInterval: 15s
+    additionalConfigs: |
+      - job_name: "kubelet"
+        scheme: https
+        metrics_path: /metrics/cadvisor
+        tls_config:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        authorization:
+          credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        kubernetes_sd_configs:
+          - role: node
+        relabel_configs:
+          - action: labelmap
+            regex: __meta_kubernetes_node_label_(.+)
+
+      - job_name: "kubernetes-apiservers"
+        kubernetes_sd_configs:
+          - role: endpoints
+        scheme: https
+        tls_config:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        authorization:
+          credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        relabel_configs:
+          - source_labels:
+              [
+                __meta_kubernetes_namespace,
+                __meta_kubernetes_service_name,
+                __meta_kubernetes_endpoint_port_name,
+              ]
+            action: keep
+            regex: default;kubernetes;https
+
+  kubeStateMetrics:
+    image:
+      repository: registry.k8s.io/kube-state-metrics/kube-state-metrics
+      tag: v2.8.2
+      pullPolicy: IfNotPresent
+    resources:
+      limits:
+        memory: "300Mi"
+        cpu: "300m"
+
+  prometheusOperator:
+    image:
+      repository: quay.io/prometheus-operator/prometheus-operator
+      tag: v0.65.2
+      pullPolicy: IfNotPresent
+    resources:
+      limits:
+        cpu: 200m
+        memory: 200Mi
       requests:
-        cpu: 10m
-        memory: 20Mi
+        cpu: 100m
+        memory: 100Mi
+
+    kubeRbacProxy:
+      image:
+        repository: quay.io/brancz/kube-rbac-proxy
+        tag: v0.14.1
+        pullPolicy: IfNotPresent
+      resources:
+        limits:
+          cpu: 20m
+          memory: 40Mi
+        requests:
+          cpu: 10m
+          memory: 20Mi

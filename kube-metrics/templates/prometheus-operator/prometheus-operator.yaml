@@ -1,4 +1,4 @@
-{{- $module := index .Values.prometheusOperator -}}
+{{- $module := .Values.monitoring.prometheusOperator -}}
 {{- $module_name := "prometheus-operator" -}}
 apiVersion: apps/v1
 kind: Deployment
@@ -6,6 +6,7 @@ metadata:
   labels:
     app.kubernetes.io/name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
   name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
+  namespace:  {{ .Release.Namespace }}
 spec:
   replicas: 1
   selector:
@@ -74,6 +75,7 @@ metadata:
   labels:
     app.kubernetes.io/name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
   name: {{ include "kube-metrics.fullname" . }}-{{ $module_name }}
+  namespace:  {{ .Release.Namespace }}
 spec:
   clusterIP: None
   ports:
